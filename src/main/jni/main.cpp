@@ -3,10 +3,10 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
-#include <string>
 #include<sstream>
 #include <cmath>
-//#include <SFML/Network.hpp>
+#include <SFML/Network.hpp>
+#include "Player.h"
 
 // Do we want to showcase direct JNI/NDK interaction?
 // Undefine this to get real cross-platform code.
@@ -92,23 +92,16 @@ std::string convertInt(int number)
 }
 
 
+
+
+
 // This is the actual Android example. You don't have to write any platform
 // specific code, unless you want to use things not directly exposed.
 // ('vibrate()' in this example; undefine 'USE_JNI' above to disable it)
 int main(int argc, char *argv[]) {
-    float leftPaddleSpeed = 10.0f;
-    float rightPaddleSpeed = 4.0f;
-    float ballSpeed = 400.0f;
-    float ballAngle = 0.0f;
 
-    float pi = 3.14159f;
-
-    float ballVelX = -10.0f;
-    float ballVelY = 8.0f;
-    bool ballMoving = false;
-    int rightPaddleScore = 0;
-    int leftPaddleScore = 0;
     sf::Time t;
+    srand(time(NULL));
 
     JavaHandler* jh = new JavaHandler();
 
@@ -116,31 +109,40 @@ int main(int argc, char *argv[]) {
     window.setFramerateLimit(60);
 
     //sf::Texture texture;
-    sf::Texture leftPaddleImage, rightPaddleImage, ballImage;
+    sf::Texture leftPaddleImage, rightPaddleImage;
     sf::Font text;
     sf::Text score;
     score.setFont(text);
+
     score.setCharacterSize(40);
     score.setPosition(window.getSize().x*.5, 50.0f);
     score.setFillColor(sf::Color::White);
     score.setString("0         0");
     if (!leftPaddleImage.loadFromFile("paddle.png")
-    ||  !rightPaddleImage.loadFromFile("paddle_right.png")
-    ||  !ballImage.loadFromFile("ball.png"))
+    ||  !rightPaddleImage.loadFromFile("paddle_right.png"))
         return EXIT_FAILURE;
 
     if(!text.loadFromFile("sansation.ttf"))
         return EXIT_FAILURE;
 
-    sf::Sprite leftPaddle(leftPaddleImage);
-    sf::Sprite rightPaddle(rightPaddleImage);
-    sf::Sprite ball(ballImage);
-    leftPaddle.move(leftPaddleImage.getSize().x, window.getSize().y * .5);
-    rightPaddle.move(window.getSize().x - rightPaddleImage.getSize().x, window.getSize().y * .5);
-    ball.move(window.getSize().x*.5, window.getSize().y*.5);
 
-    //image.setPosition(0, 0);
-    //image.setOrigin(texture.getSize().x / 2, texture.getSize().y / 2);
+    //creating all the sprites
+    //player Sprites
+    sf::Sprite playerSprite(leftPaddleImage);
+    sf::Sprite otherPlayerSprite(rightPaddleImage);
+    //Sprites to add or subtract score from the player's side
+    sf::Sprite addScore();
+    sf::Sprite subtractScore();
+    sf::Sprite rollDice();
+    //sprites to join or host game
+    sf::Sprite hostSprite();
+    sf::Sprite joinSprite();
+
+
+    Player player(playerSprite, 50, false);
+    Player otherPlayer(otherPlayerSprite, 50, false);
+
+
 
     sf::Music music;
     //if (!music.openFromFile("canary.wav"))
@@ -163,67 +165,20 @@ int main(int argc, char *argv[]) {
                     view.setCenter(event.size.width / 2, event.size.height / 2);
                     window.setView(view);
                     break;
-                case sf::Event::TouchMoved:
+                case sf::Event::TouchBegan:
                     if (event.touch.finger == 0) {
-                            leftPaddle.setPosition(leftPaddle.getPosition().x,(event.touch.y-leftPaddleImage.getSize().y*.5));
-                        //jh->vibrate(sf::milliseconds(10));
+                        //insert code to do hit detection on all the different sprites
                     }
                     break;
             }
         }
         //image.move(1.0f,1.0f);
-        if(ball.getPosition().x <= 0)
-        {
-           ballMoving = false;
-           rightPaddleScore++;
-        }
-        if(ball.getPosition().x >= window.getSize().x)
-        {
-            ballMoving = false;
-            leftPaddleScore++;
-        }
-
-        if(leftPaddleScore > 3 || rightPaddleScore > 3)
-        {
-            leftPaddleScore = rightPaddleScore = 0;
-        }
-
-        if(ball.getGlobalBounds().intersects(leftPaddle.getGlobalBounds()))
-        {
-            ballVelX = 20.0f;
-        }
-        if(ball.getGlobalBounds().intersects(rightPaddle.getGlobalBounds())){
-            ballVelX = -20.0f;
-        }
-        if((ball.getPosition().y < 0) )
-        {
-            ballVelY = 20.0f;
-        }
-
-        if((ball.getPosition().y+ballImage.getSize().y > window.getSize().y))
-        {
-            ballVelY = -20.0f;
-        }
-
-        if(!ballMoving)
-        {
-            ball.setPosition(window.getSize().x*.5, window.getSize().y*.5);
-            ballMoving = true;
-        }
-
-        if(ballMoving)
-            ball.move(ballVelX,ballVelY);
-
-
-        rightPaddle.setPosition(rightPaddle.getPosition().x, ball.getPosition().y);
-
 
         window.clear(sf::Color::Black);
-        score.setString(convertInt(leftPaddleScore)+"         "+convertInt(rightPaddleScore));
+        //score.setString(convertInt(leftPaddleScore)+"         "+convertInt(rightPaddleScore));
         window.draw(score);
-        window.draw(ball);
-        window.draw(leftPaddle);
-        window.draw(rightPaddle);
+        player.draw(window);
+        otherPlayer.draw(window);
 
         window.display();
     }
