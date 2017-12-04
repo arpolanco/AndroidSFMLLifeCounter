@@ -73,6 +73,71 @@ public:
         env->DeleteLocalRef(context);
         env->DeleteLocalRef(natact);
     }
+
+    void initNSD()
+    {
+        jobject nativeActivity = activity->clazz;
+        jclass acl = env->GetObjectClass(nativeActivity);
+        jmethodID getClassLoader = env->GetMethodID(acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+        jobject cls = env->CallObjectMethod(nativeActivity, getClassLoader);
+        jclass classLoader = env->FindClass("java/lang/ClassLoader");
+        jmethodID findClass = env->GetMethodID(classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+        jstring strClassName = env->NewStringUTF("javaStuff/NSD");
+        jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
+        env->DeleteLocalRef(strClassName);
+
+        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "(Landroid/app/Activity;)V");
+        env->CallStaticObjectMethod(testClass, method);
+
+        env->DeleteLocalRef(acl);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(testClass);
+        env->DeleteLocalRef(cls);
+    }
+
+    void registerService(int port)
+    {
+        jobject nativeActivity = activity->clazz;
+        jclass acl = env->GetObjectClass(nativeActivity);
+        jmethodID getClassLoader = env->GetMethodID(acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+        jobject cls = env->CallObjectMethod(nativeActivity, getClassLoader);
+        jclass classLoader = env->FindClass("java/lang/ClassLoader");
+        jmethodID findClass = env->GetMethodID(classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+        jstring strClassName = env->NewStringUTF("javaStuff/NSD");
+        jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
+        env->DeleteLocalRef(strClassName);
+
+        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "(I)V");
+        env->CallStaticObjectMethod(testClass, method, 6969);
+
+        env->DeleteLocalRef(acl);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(testClass);
+        env->DeleteLocalRef(cls);
+    }
+
+    void discoverService()
+    {
+        jobject nativeActivity = activity->clazz;
+        jclass acl = env->GetObjectClass(nativeActivity);
+        jmethodID getClassLoader = env->GetMethodID(acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+        jobject cls = env->CallObjectMethod(nativeActivity, getClassLoader);
+        jclass classLoader = env->FindClass("java/lang/ClassLoader");
+        jmethodID findClass = env->GetMethodID(classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+        jstring strClassName = env->NewStringUTF("javaStuff/NSD");
+        jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
+        env->DeleteLocalRef(strClassName);
+
+        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "()V");
+        env->CallStaticObjectMethod(testClass, method);
+
+        env->DeleteLocalRef(acl);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(testClass);
+        env->DeleteLocalRef(cls);
+    }
+
+
 private:
     ANativeActivity* activity;
     JavaVM* vm;
