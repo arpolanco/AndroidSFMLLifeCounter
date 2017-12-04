@@ -39,12 +39,6 @@ public:
         isHost = isHosting;
     }
 
-    void setPosition(float x, float y)
-    {
-
-    }
-
-    void setPosition()
 
     int getLife()
     {
@@ -61,9 +55,6 @@ public:
         sf::Time t;
         srand(time(NULL));
         return rand()%1+sides;
-    }
-    void draw(sf::RenderWindow window){
-        window.draw(sprite);
     }
 
 };
