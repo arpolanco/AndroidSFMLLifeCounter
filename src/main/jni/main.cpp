@@ -7,6 +7,8 @@
 #include<sstream>
 #include <cmath>
 #include "Player.h"
+#include <unistd.h>
+
 //#include <SFML/Network.hpp>
 
 // Do we want to showcase direct JNI/NDK interaction?
@@ -183,14 +185,19 @@ int main(int argc, char *argv[]) {
     sf::Texture playerImage, otherPlayerImage, scoreAddImage, scoreSubImage, hostImage, joinImage, diceImage;
 
     sf::Font text;
-    sf::Text diceText;
-    diceText.setFont(text);
+
+    sf::Text playerLifeText;
+    sf::Text otherPlayerLifeText;
+    playerLifeText.setFont(text);
+    otherPlayerLifeText.setFont(text);
     if(!text.loadFromFile("sansation.ttf"))
         return EXIT_FAILURE;
 
-    diceText.setCharacterSize(40);
-    diceText.setPosition(window.getSize().x*.5, 50.0f);
-    diceText.setFillColor(sf::Color::White);
+    playerLifeText.setCharacterSize(96);
+    otherPlayerLifeText.setCharacterSize(96);
+
+    playerLifeText.setFillColor(sf::Color::White);
+    otherPlayerLifeText.setFillColor(sf::Color::White);
     //score.setString("0         0");
 
     //Loading Textures
@@ -218,14 +225,16 @@ int main(int argc, char *argv[]) {
 
 
     //set Positions of the sprites
-    playerSprite.setPosition(window.getSize().x*.5, window.getSize().y-playerSprite.getLocalBounds().height);
-    otherPlayerSprite.setPosition(window.getSize().x*.5, 0);
+    playerSprite.setPosition(window.getSize().x*.5-(playerSprite.getLocalBounds().width*.5), window.getSize().y-playerSprite.getLocalBounds().height);
+    otherPlayerSprite.setPosition(window.getSize().x*.5-(otherPlayerSprite.getLocalBounds().width*.5), 0);
 
-    hostSprite.setPosition(0,window.getSize().y*.5);
-    joinSprite.setPosition(window.getSize().x-joinSprite.getLocalBounds().width,window.getSize().y*.5);
+    hostSprite.setPosition(0,window.getSize().y*.5-hostSprite.getLocalBounds().height*.5);
+    joinSprite.setPosition(window.getSize().x-joinSprite.getLocalBounds().width,window.getSize().y*.5-hostSprite.getLocalBounds().height*.5);
 
-    addScoreSprite.setPosition(playerSprite.getPosition().x+addScoreSprite.getLocalBounds().width, playerSprite.getPosition().y);
-    subtractScoreSprite.setPosition(playerSprite.getPosition().x-subtractScoreSprite.getLocalBounds().width, playerSprite.getPosition().y);
+    addScoreSprite.setPosition(playerSprite.getPosition().x+playerSprite.getLocalBounds().width+addScoreSprite.getLocalBounds().width*.1, playerSprite.getPosition().y+playerSprite.getLocalBounds().height*.5-subtractScoreSprite.getLocalBounds().height*.5);
+    subtractScoreSprite.setPosition(playerSprite.getPosition().x-subtractScoreSprite.getLocalBounds().width, playerSprite.getPosition().y+playerSprite.getLocalBounds().height*.5-subtractScoreSprite.getLocalBounds().height*.5);
+
+
 
     //initalize the player
     Player player(playerSprite, 50, false);
@@ -257,26 +266,66 @@ int main(int argc, char *argv[]) {
                 case sf::Event::TouchBegan:
                     if (event.touch.finger == 0) {
                         //insert code to do hit detection on all the different sprites
+
+                        //networking to join
                         if(insideSprite(joinSprite, event.touch.x,event.touch.y))
                         {
 
+                            if(!player.isHost)
+                            {
+                                joinSprite.setColor(sf::Color::Cyan);
+                                otherPlayer.isHost = true;
+
+                            }
+                        }
+                        //networking to host
+                        if(insideSprite(hostSprite, event.touch.x,event.touch.y))
+                        {
+                            //not sure if i should check if the player is already host but ill let you decide
+                            if(!otherPlayer.isHost || !player.isHost)
+                            {
+                                hostSprite.setColor(sf::Color::Cyan);
+                                player.isHost = true;
+                            }
+                        }
+
+                        if(insideSprite(subtractScoreSprite,event.touch.x,event.touch.y ))
+                        {
+                            player.addLife(-1);
+                        }
+
+                        if(insideSprite(addScoreSprite,event.touch.x,event.touch.y ))
+                        {
+
+                            player.addLife(1);
                         }
 
                     }
                     break;
             }
         }
-        //image.move(1.0f,1.0f);
+
+
+        //sets string for the life
+
+        playerLifeText.setString(convertInt(player.getLife()));
+        otherPlayerLifeText.setString(convertInt(otherPlayer.getLife()));
+        playerLifeText.setPosition(playerSprite.getPosition().x+(playerSprite.getLocalBounds().width*.5)-playerLifeText.getLocalBounds().width*.5, playerSprite.getPosition().y+playerSprite.getLocalBounds().height*.5-playerLifeText.getLocalBounds().height*.5);
+        otherPlayerLifeText.setPosition(otherPlayerSprite.getPosition().x+(otherPlayerSprite.getLocalBounds().width*.5)-otherPlayerLifeText.getLocalBounds().width*.5, otherPlayerSprite.getPosition().y+otherPlayerSprite.getLocalBounds().height*.5-otherPlayerLifeText.getLocalBounds().height*.5);
+
 
         window.clear(sf::Color::Black);
-        //score.setString(convertInt(leftPaddleScore)+"         "+convertInt(rightPaddleScore));
-        //window.draw(score);
+
+        //drawing all the stuff
+
         window.draw(player.sprite);
         window.draw(otherPlayer.sprite);
         window.draw(hostSprite);
         window.draw(joinSprite);
         window.draw(addScoreSprite);
         window.draw(subtractScoreSprite);
+        window.draw(playerLifeText);
+        window.draw(otherPlayerLifeText);
 
 
         window.display();
