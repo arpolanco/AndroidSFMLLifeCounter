@@ -45,6 +45,11 @@ public:
         return life;
     }
 
+    void setLife(int i)
+    {
+        life = i;
+    }
+
     void addLife(int addedLife)
     {
         life+=addedLife;

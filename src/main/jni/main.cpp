@@ -89,8 +89,8 @@ public:
         jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
         env->DeleteLocalRef(strClassName);
 
-        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "(Landroid/app/Activity;)V");
-        env->CallStaticObjectMethod(testClass, method);
+        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "()V");
+        env->CallStaticVoidMethod(testClass, method);
 
         env->DeleteLocalRef(acl);
         env->DeleteLocalRef(classLoader);
@@ -110,8 +110,8 @@ public:
         jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
         env->DeleteLocalRef(strClassName);
 
-        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "(I)V");
-        env->CallStaticObjectMethod(testClass, method, 6969);
+        jmethodID method = env->GetStaticMethodID(testClass, "registerService", "(I)V");
+        env->CallStaticVoidMethod(testClass, method, 6969);
 
         env->DeleteLocalRef(acl);
         env->DeleteLocalRef(classLoader);
@@ -131,8 +131,51 @@ public:
         jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
         env->DeleteLocalRef(strClassName);
 
-        jmethodID method = env->GetStaticMethodID(testClass, "initNetworkDiscoveryService", "()V");
-        env->CallStaticObjectMethod(testClass, method);
+        jmethodID method = env->GetStaticMethodID(testClass, "discoverService", "()V");
+        env->CallStaticVoidMethod(testClass, method);
+
+        env->DeleteLocalRef(acl);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(testClass);
+        env->DeleteLocalRef(cls);
+    }
+
+    void sendData(int i)
+    {
+        jobject nativeActivity = activity->clazz;
+        jclass acl = env->GetObjectClass(nativeActivity);
+        jmethodID getClassLoader = env->GetMethodID(acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+        jobject cls = env->CallObjectMethod(nativeActivity, getClassLoader);
+        jclass classLoader = env->FindClass("java/lang/ClassLoader");
+        jmethodID findClass = env->GetMethodID(classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+        jstring strClassName = env->NewStringUTF("javaStuff/NSD");
+        jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
+        env->DeleteLocalRef(strClassName);
+
+        jmethodID method = env->GetStaticMethodID(testClass, "sendData", "(I)V");
+        env->CallStaticVoidMethod(testClass, method, i);
+
+        env->DeleteLocalRef(acl);
+        env->DeleteLocalRef(classLoader);
+        env->DeleteLocalRef(testClass);
+        env->DeleteLocalRef(cls);
+    }
+
+    void getData(int* i)
+    {
+        jobject nativeActivity = activity->clazz;
+        jclass acl = env->GetObjectClass(nativeActivity);
+        jmethodID getClassLoader = env->GetMethodID(acl, "getClassLoader", "()Ljava/lang/ClassLoader;");
+        jobject cls = env->CallObjectMethod(nativeActivity, getClassLoader);
+        jclass classLoader = env->FindClass("java/lang/ClassLoader");
+        jmethodID findClass = env->GetMethodID(classLoader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+        jstring strClassName = env->NewStringUTF("javaStuff/NSD");
+        jclass testClass = (jclass)(env->CallObjectMethod(cls, findClass, strClassName));
+        env->DeleteLocalRef(strClassName);
+
+        jmethodID method = env->GetStaticMethodID(testClass, "getData", "()I");
+        jint life = env->CallStaticIntMethod(testClass, method);
+        *i = (int)life;
 
         env->DeleteLocalRef(acl);
         env->DeleteLocalRef(classLoader);
@@ -223,7 +266,6 @@ int main(int argc, char *argv[]) {
     sf::Sprite hostSprite(hostImage);
     sf::Sprite joinSprite(joinImage);
 
-
     //set Positions of the sprites
     playerSprite.setPosition(window.getSize().x*.5-(playerSprite.getLocalBounds().width*.5), window.getSize().y-playerSprite.getLocalBounds().height);
     otherPlayerSprite.setPosition(window.getSize().x*.5-(otherPlayerSprite.getLocalBounds().width*.5), 0);
@@ -234,22 +276,12 @@ int main(int argc, char *argv[]) {
     addScoreSprite.setPosition(playerSprite.getPosition().x+playerSprite.getLocalBounds().width+addScoreSprite.getLocalBounds().width*.1, playerSprite.getPosition().y+playerSprite.getLocalBounds().height*.5-subtractScoreSprite.getLocalBounds().height*.5);
     subtractScoreSprite.setPosition(playerSprite.getPosition().x-subtractScoreSprite.getLocalBounds().width, playerSprite.getPosition().y+playerSprite.getLocalBounds().height*.5-subtractScoreSprite.getLocalBounds().height*.5);
 
-
-
     //initalize the player
     Player player(playerSprite, 50, false);
     Player otherPlayer(otherPlayerSprite, 50, false);
-
-
-
-    sf::Music music;
-    //if (!music.openFromFile("canary.wav"))
-    //    return EXIT_FAILURE;
-
-    //music.play();
+    jh->initNSD();
 
     sf::View view = window.getDefaultView();
-
     sf::Event event;
     while (window.isOpen()) {
 
@@ -265,38 +297,32 @@ int main(int argc, char *argv[]) {
                     break;
                 case sf::Event::TouchBegan:
                     if (event.touch.finger == 0) {
-                        //insert code to do hit detection on all the different sprites
-
                         //networking to join
                         if(insideSprite(joinSprite, event.touch.x,event.touch.y))
                         {
-
-                            if(!player.isHost)
+                            if(!player.isHost || !otherPlayer.isHost)
                             {
                                 joinSprite.setColor(sf::Color::Cyan);
                                 otherPlayer.isHost = true;
-
+                                jh->discoverService();
                             }
                         }
                         //networking to host
-                        if(insideSprite(hostSprite, event.touch.x,event.touch.y))
+                        else if(insideSprite(hostSprite, event.touch.x,event.touch.y))
                         {
-                            //not sure if i should check if the player is already host but ill let you decide
                             if(!otherPlayer.isHost || !player.isHost)
                             {
                                 hostSprite.setColor(sf::Color::Cyan);
                                 player.isHost = true;
+                                jh->registerService(42069);
                             }
                         }
-
-                        if(insideSprite(subtractScoreSprite,event.touch.x,event.touch.y ))
+                        else if(insideSprite(subtractScoreSprite,event.touch.x,event.touch.y ))
                         {
                             player.addLife(-1);
                         }
-
-                        if(insideSprite(addScoreSprite,event.touch.x,event.touch.y ))
+                        else if(insideSprite(addScoreSprite,event.touch.x,event.touch.y ))
                         {
-
                             player.addLife(1);
                         }
 
@@ -305,19 +331,23 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        //Send the other guy your life shit
+        if (player.isHost || otherPlayer.isHost)
+            jh->sendData(player.life);
+
+        //Update the other guys life
+        if (player.isHost || otherPlayer.isHost)
+            jh->getData(&otherPlayer.life);
 
         //sets string for the life
-
         playerLifeText.setString(convertInt(player.getLife()));
         otherPlayerLifeText.setString(convertInt(otherPlayer.getLife()));
         playerLifeText.setPosition(playerSprite.getPosition().x+(playerSprite.getLocalBounds().width*.5)-playerLifeText.getLocalBounds().width*.5, playerSprite.getPosition().y+playerSprite.getLocalBounds().height*.5-playerLifeText.getLocalBounds().height*.5);
         otherPlayerLifeText.setPosition(otherPlayerSprite.getPosition().x+(otherPlayerSprite.getLocalBounds().width*.5)-otherPlayerLifeText.getLocalBounds().width*.5, otherPlayerSprite.getPosition().y+otherPlayerSprite.getLocalBounds().height*.5-otherPlayerLifeText.getLocalBounds().height*.5);
 
-
         window.clear(sf::Color::Black);
 
         //drawing all the stuff
-
         window.draw(player.sprite);
         window.draw(otherPlayer.sprite);
         window.draw(hostSprite);
@@ -326,7 +356,6 @@ int main(int argc, char *argv[]) {
         window.draw(subtractScoreSprite);
         window.draw(playerLifeText);
         window.draw(otherPlayerLifeText);
-
 
         window.display();
     }
