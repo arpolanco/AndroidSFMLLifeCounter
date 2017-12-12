@@ -303,6 +303,7 @@ int main(int argc, char *argv[]) {
                             if(!player.isHost || !otherPlayer.isHost)
                             {
                                 joinSprite.setColor(sf::Color::Cyan);
+
                                 otherPlayer.isHost = true;
                                 jh->discoverService();
                             }

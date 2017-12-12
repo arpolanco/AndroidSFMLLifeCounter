@@ -87,7 +87,7 @@ public class NSD {
                     System.out.println("Incorrect Service Type: " + nsdServiceInfo.getServiceType());
                     System.out.println("Service Name: " + nsdServiceInfo.getServiceName());
                 }
-                else if (nsdServiceInfo.getServiceName().equals(mServiceInfo.getServiceName())){
+                else if (nsdServiceInfo.getServiceName().equals("LifeCounter")){
                     System.out.println("Correct Service Type");
                     System.out.println("Service Name: " + nsdServiceInfo.getServiceName());
                     mNsdManager.resolveService(nsdServiceInfo, mResolveListener);
@@ -136,11 +136,13 @@ public class NSD {
     }
 
     public static void discoverService(){
-        mNsdManager.discoverServices(mServiceInfo.getServiceType(), NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+        mNsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
     }
 
     public static void sendData(int i){
         //System.out.println("Sending data");
+        if (mClient == null)
+            return;
         if (isHost){
             try {
                 mServer.sendData(String.valueOf(i));
@@ -160,7 +162,10 @@ public class NSD {
     }
 
     public static int getData(){
-        System.out.println("getting data");
+        //System.out.println("getting data");
+        if (mClient == null)
+            return 50;
+
         if (isHost){
             return mServer.mLife;
         }

@@ -60,6 +60,8 @@ public class ClientThread extends AsyncTask<Void, Void, Void> {
     }
 
     public void SendData(String data) throws IOException {
+        if (mOutputWriter == null)
+            return;
         System.out.println("Writing data to client socket");
         mOutputWriter.write(data + "\n");
         mOutputWriter.flush();
